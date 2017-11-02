@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * Implementation of hook_requirements
+ */
+function facebook_stream_requirements($phase) {
+  $t = get_t();
+  $items = array();
+  $status = array('title' => $t('Facebook PHP SDK'));
+  $fb_sdk = drupal_get_path('module','facebook_stream').'/facebook-php-sdk';
+  if($phase == 'install') {
+    if (file_exists($fb_sdk) && is_dir($fb_sdk)) { 
+      $status['description'] = $t('Facebook SDK found at %path', array('%path' => $fb_sdk));
+      $status['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      $status['description'] = $t('Facebook PHP SDK not found. Download php sdk from !downloadurl and copy the extracted directory into facebook stream module as facebook-php-sdk', array('!downloadurl' => l('http://github.com/facebook/php-sdk', 'http://github.com/facebook/php-sdk')));
+      $status['severity'] = REQUIREMENT_ERROR;
+      $status['value'] = $t('Not found');
+    }
+  }
+  $items[] = $status;
+  return $items;
+}
+
+function facebook_stream_uninstall() {
+  variable_del('facebook_stream_php_sdk');
+  variable_del('facebook_stream_facebook_api_id');
+  variable_del('facebook_stream_facebook_secret_key');
+  variable_del('fbstream_block_post_display_more');
+  variable_del('fbstream_block_posts_update_time');
+  variable_del('stream_post_comments');
+}

@@ -1,0 +1,6 @@
+name = RYI Study Formats
+description = Provides study format to Online Learning courses.
+core = 7.x
+version = 7.x-1.0
+package = Rangjung Yeshe Institute
+

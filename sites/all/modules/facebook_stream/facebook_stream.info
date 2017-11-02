@@ -1,0 +1,27 @@
+; $Id: facebook_stream.info,v 1.1.2.2.2.1 2011/02/06 14:33:43 prajwala Exp $
+name= Facebook Stream
+description = Allows users to import and export information from Facebook.
+
+package = Facebook
+core = 7.x
+
+files[] = facebook_stream.module
+files[] = stream.admin.inc
+
+configure = admin/settings/facebook_stream
+
+
+
+; Information added by drupal.org packaging script on 2010-11-03
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "facebook_stream"
+datestamp = "1288742922"
+
+
+; Information added by drupal.org packaging script on January 1, 1970 - 00:00
+version = "7.x-1.0-beta1"
+core = "7.x"
+project = "facebook_stream"
+datestamp = "1297003948"
+

@@ -1,0 +1,5 @@
+name = RYI Fee Request
+description = Provides functions to show fee structure based on selected country.
+core = 7.x
+version = 7.x-1.0
+package = Rangjung Yeshe Institute

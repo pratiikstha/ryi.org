@@ -1,0 +1,8 @@
+<?php
+
+function ryi_fee_request_uninstall() {
+  variable_del('ryi_fee_request_info');
+  variable_del('ryi_fee_request_intl');
+  variable_del('ryi_fee_request_saarc');
+  variable_del('ryi_fee_request_local');
+}

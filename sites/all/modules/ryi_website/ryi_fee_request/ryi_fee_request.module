@@ -1,0 +1,138 @@
+<?php
+
+function ryi_fee_request_block_info() {
+  $blocks['fee_request'] = array(
+    'info' => 'RYI Fee Request',
+  );
+  return $blocks;
+  }
+
+function ryi_fee_request_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'fee_request') {
+    $form['fee_info'] = array(
+      '#type' => 'textarea',
+      '#title' => 'Introduction',
+      '#description' => 'Information on the Course Tuitions and Fees.',
+      '#default_value' => variable_get('ryi_fee_request_info', ''),
+    );
+
+    $form['fee_intl'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Fee Structure PDF File for International Student',
+      '#description' => 'Upload the PDF file in advance and insert the file location here.',
+      '#field_prefix' => file_create_url('public://'),
+      '#default_value' => variable_get('ryi_fee_request_intl', ''),
+    );
+
+    $form['fee_saarc'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Fee Structure PDF File for SAARC Student',
+      '#description' => 'Upload the PDF file in advance and insert the file location here.',
+      '#field_prefix' => file_create_url('public://'),
+      '#default_value' => variable_get('ryi_fee_request_saarc', ''),
+    );
+
+    $form['fee_local'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Fee Structure PDF File for Nepali Student',
+      '#description' => 'Upload the PDF file in advance and insert the file location here.',
+      '#field_prefix' => file_create_url('public://'),
+      '#default_value' => variable_get('ryi_fee_request_local', ''),
+    );
+  }
+  return $form;
+}
+
+function ryi_fee_request_block_save($delta = '', $form = array()) {
+  if ($delta == 'fee_request') {
+    variable_set('ryi_fee_request_info', $form['fee_info']);
+    variable_set('ryi_fee_request_intl', $form['fee_intl']);
+    variable_set('ryi_fee_request_saarc', $form['fee_saarc']);
+    variable_set('ryi_fee_request_local', $form['fee_local']);
+  }
+}
+
+function ryi_fee_request_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'fee_request':
+      $block['subject'] = '';
+      $block['content'] = drupal_get_form('ryi_fee_request_form');
+      break;
+  }
+
+  return $block;
+}
+
+function ryi_fee_request_form($form, &$form_state) {
+  $form['info'] = array(
+    '#type' => 'item',
+    '#markup' => variable_get('ryi_fee_request_info', ''),
+  );
+
+  $form['country'] = array(
+    '#title' => 'Country of Citizenship',
+    '#type' => 'select',
+    '#options' => ryi_fee_request_get_countries(),
+    '#required' => TRUE,
+    '#default_value' => NULL,
+    '#empty_option' => '--Select--',
+  );
+
+  //$form['#attributes']['target'] = '_blank';
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+
+  return $form;
+}
+
+function ryi_fee_request_form_validate($form, &$form_state) {
+}
+
+function ryi_fee_request_form_submit($form, &$form_state) {
+  $tid = $form_state['values']['country'];
+  $group = ryi_fee_request_get_country_group($tid);
+
+  if ($group == 'SAARC') {
+    $file = 'public://' . variable_get('ryi_fee_request_saarc', '');
+    ryi_fee_request_goto_file($file);
+  }
+  elseif ($group == 'LOCAL') {
+    $file = 'public://' . variable_get('ryi_fee_request_local', '');
+    ryi_fee_request_goto_file($file);
+  }
+  else {
+    $file = 'public://' . variable_get('ryi_fee_request_intl', '');
+    ryi_fee_request_goto_file($file);
+  }
+}
+
+function ryi_fee_request_goto_file($file) {
+  $url = '/';
+  if (is_file($file)) {
+    $url = file_create_url($file);
+  }
+  drupal_goto($url);
+}
+
+function ryi_fee_request_get_countries() {
+  $vocab = taxonomy_vocabulary_machine_name_load('countries');
+  $terms = taxonomy_get_tree($vocab->vid);
+
+  foreach ($terms as $term) { 
+    $output[$term->tid] = $term->name;
+  }
+
+  return $output;
+}
+
+function ryi_fee_request_get_country_group($term_id) {
+  $taxonomy_term = taxonomy_term_load($term_id);
+  $country_group = field_get_items('taxonomy_term', $taxonomy_term, 'field_country_group');
+  return $country_group[0]['value'];
+}

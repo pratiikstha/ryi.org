@@ -1,0 +1,71 @@
+<?php
+
+function ryi_study_formats_get_db() {
+  $dbconn = array(
+      'database' => 'ryi_portal_new',
+      'username' => 'ryi_dbportal', //ryi_dbportal
+      'password' => 'M@hakal4', //M@hakal4
+      'host' => 'localhost',
+      'driver' => 'mysql',
+  );
+  Database::addConnectionInfo('ryi_portal', 'default', $dbconn);
+}
+
+function ryi_study_formats_node_view($node, $view_mode, $langcode) {
+  if ($node->type == 'course' && $view_mode == 'full') {
+    $tid = key(taxonomy_get_term_by_name('Online Learning', 'programs'));
+    $course_code = $node->field_course_code['und'][0]['value'];
+    if ($node->field_course_program['und'][0]['tid'] == $tid) {
+      $node->content['study_formats'] = array(
+        '#markup' => ryi_study_formats_get_content($course_code),
+        '#weight' => 10,
+        '#prefix' => '<div id="study-formats">',
+        '#suffix' => '</div>',
+        '#attached' => array(
+          'library' => array(array('system', 'ui.tabs')),
+          'js' => array(array('data' => 'jQuery(document).ready(function(){jQuery("#study-formats").tabs();});', 'type' => 'inline')),
+        ),
+      );
+    }
+  }
+}
+
+function ryi_study_formats_get_content($course_code) {
+  ryi_study_formats_get_db();
+  db_set_active('ryi_portal');
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'course')
+        ->fieldCondition('field_course_code', 'value', $course_code);
+  $result = $query->execute();
+  $course_id = ($result) ? key($result['node']) : 0;
+
+  $output = '';
+  $sql = 'SELECT * FROM {ryi_study_formats} WHERE course_id = :nid AND activate = 1 ORDER BY study_format';
+  $query = db_query($sql, array(':nid' => $course_id))->fetchAll();
+  db_set_active();
+
+  if ($query) {
+    //Header
+    $output .= '<ul>';
+    foreach ($query as $key => $format) {
+      $study_format = taxonomy_term_load($format->study_format);
+      $study_format = empty($study_format) ? '' : $study_format->name;
+      $output .= '<li><a href="#tabs-' . $format->format_id . '">' . $study_format . '</a></li>';
+    }
+    $output .= '</ul>';
+
+    //Content
+    $online_learning_tid = key(taxonomy_get_term_by_name('Online Learning', 'programs'));
+    foreach ($query as $key => $format) {
+      $link = 'http://portal.ryi.org/applications/add/' . $online_learning_tid . '/' . $course_id . '/' . $format->study_format;
+      $link = l('Apply Now', $link, array('attributes' => array('class' => 'btn', 'target' => '_blank')));
+      $output .= '<div id="tabs-' . $format->format_id . '">';
+      $output .= $format->description . '<div class="apply-button">' . $link . '</div>';
+      $output .= '</div>';
+    }
+  }
+
+  return $output;
+}
